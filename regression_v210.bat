@@ -1,5 +1,5 @@
 
-SET cpuISA=0
+SET cpuISA=-1
 
 IF NOT "%1"=="" (
 	SET cpuISA=%1
