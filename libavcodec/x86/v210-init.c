@@ -39,8 +39,8 @@ av_cold void ff_v210_x86_init(V210DecContext *s)
         if (HAVE_AVX_EXTERNAL && cpu_flags & AV_CPU_FLAG_AVX)
             s->unpack_frame = ff_v210_planar_unpack_aligned_avx;
 
-		if (HAVE_AVX2_EXTERNAL && cpu_flags & AV_CPU_FLAG_AVX2)
-			s->unpack_frame = ff_v210_planar_unpack_aligned_avx2;
+        if (HAVE_AVX2_EXTERNAL && cpu_flags & AV_CPU_FLAG_AVX2)
+            s->unpack_frame = ff_v210_planar_unpack_aligned_avx2;
 	}
     else {
         if (cpu_flags & AV_CPU_FLAG_SSSE3)
@@ -49,8 +49,8 @@ av_cold void ff_v210_x86_init(V210DecContext *s)
         if (HAVE_AVX_EXTERNAL && cpu_flags & AV_CPU_FLAG_AVX)
             s->unpack_frame = ff_v210_planar_unpack_unaligned_avx;
 
-		if (HAVE_AVX2_EXTERNAL && cpu_flags & AV_CPU_FLAG_AVX2)
-			s->unpack_frame = ff_v210_planar_unpack_unaligned_avx2;
+        if (HAVE_AVX2_EXTERNAL && cpu_flags & AV_CPU_FLAG_AVX2)
+            s->unpack_frame = ff_v210_planar_unpack_unaligned_avx2;
     }
 #endif
 }
