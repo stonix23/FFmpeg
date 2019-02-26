@@ -109,51 +109,52 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     if ((ret = ff_get_buffer(avctx, pic, 0)) < 0)
         return ret;
 
+    y = (uint16_t*)pic->data[0];
+    u = (uint16_t*)pic->data[1];
+    v = (uint16_t*)pic->data[2];
     pic->pict_type = AV_PICTURE_TYPE_I;
     pic->key_frame = 1;
 
+    for (h = 0; h < avctx->height; h++) {
+        const uint32_t *src = (const uint32_t*)psrc;
+        uint32_t val;
 
-	for (int reps = 0; reps < 100; reps++)
-	{
-		y = (uint16_t*)pic->data[0];
-		u = (uint16_t*)pic->data[1];
-		v = (uint16_t*)pic->data[2];
+        w = (avctx->width / 12) * 12;
+        s->unpack_frame(src, y, u, v, w);
 
-		uint8_t *srcPtr = psrc;
+        y += w;
+        u += w >> 1;
+        v += w >> 1;
+        src += (w << 1) / 3;
 
-		for (h = 0; h < avctx->height; h++) {
-			const uint32_t *src = (const uint32_t*)srcPtr;
-			uint32_t val;
+        if (w < avctx->width - 5) {
+            READ_PIXELS(u, y, v);
+            READ_PIXELS(y, u, y);
+            READ_PIXELS(v, y, u);
+            READ_PIXELS(y, v, y);
+            w += 6;
+        }
 
-			w = (avctx->width / 6) * 6;
-			s->unpack_frame(src, y, u, v, w);
+        if (w < avctx->width - 1) {
+            READ_PIXELS(u, y, v);
 
-			y += w;
-			u += w >> 1;
-			v += w >> 1;
-			src += (w << 1) / 3;
+            val  = av_le2ne32(*src++);
+            *y++ =  val & 0x3FF;
+            if (w < avctx->width - 3) {
+                *u++ = (val >> 10) & 0x3FF;
+                *y++ = (val >> 20) & 0x3FF;
 
-			if (w < avctx->width - 1) {
-				READ_PIXELS(u, y, v);
+                val  = av_le2ne32(*src++);
+                *v++ =  val & 0x3FF;
+                *y++ = (val >> 10) & 0x3FF;
+            }
+        }
 
-				val = av_le2ne32(*src++);
-				*y++ = val & 0x3FF;
-				if (w < avctx->width - 3) {
-					*u++ = (val >> 10) & 0x3FF;
-					*y++ = (val >> 20) & 0x3FF;
-
-					val = av_le2ne32(*src++);
-					*v++ = val & 0x3FF;
-					*y++ = (val >> 10) & 0x3FF;
-				}
-			}
-
-			srcPtr += stride;
-			y += pic->linesize[0] / 2 - avctx->width + (avctx->width & 1);
-			u += pic->linesize[1] / 2 - avctx->width / 2;
-			v += pic->linesize[2] / 2 - avctx->width / 2;
-		}
-	}
+        psrc += stride;
+        y += pic->linesize[0] / 2 - avctx->width + (avctx->width & 1);
+        u += pic->linesize[1] / 2 - avctx->width / 2;
+        v += pic->linesize[2] / 2 - avctx->width / 2;
+    }
 
     if (avctx->field_order > AV_FIELD_PROGRESSIVE) {
         /* we have interlaced material flagged in container */
