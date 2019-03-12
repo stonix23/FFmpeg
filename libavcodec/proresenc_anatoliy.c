@@ -484,10 +484,10 @@ static inline void subimage_with_fill_template(uint16_t *src, unsigned x, unsign
         box_height = FFMIN(height - y, dst_height);
     } else {
         src_stride = stride; /* 2 lines stride */
-        src += y * src_stride * 2 + x;
-        box_height = FFMIN(height - y * 2, dst_height);
+        src += y * src_stride + x;
+        box_height = FFMIN(height/2 - y, dst_height);
         if (!is_top_field)
-            src += src_stride;
+            src += stride >> 1;
     }
 
     for (i = 0; i < box_height; ++i) {
@@ -671,7 +671,7 @@ static int prores_encode_picture(AVCodecContext *avctx, const AVFrame *pic,
             picture_height = avctx->height / 2;
         }
         mb_height = (picture_height + 15) >> 4;
-        unsafe_mb_height_limit = mb_height * 2;
+        unsafe_mb_height_limit = mb_height;
     }
 
     for (i = av_log2(DEFAULT_SLICE_MB_WIDTH); i >= 0; --i) {
